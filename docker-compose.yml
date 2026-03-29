@@ -1,0 +1,106 @@
+version: "3.9"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "${RABBITMQ_PORT}:5672"
+      - "${RABBITMQ_UI_PORT}:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+
+  mongodb-primary:
+    image: mongo:6
+    command: mongod --replSet ${MONGO_REPLICA_SET} --bind_ip_all --port 27017
+    ports:
+      - "${MONGO_PRIMARY_PORT}:27017"
+    volumes:
+      - mongo-primary:/data/db
+
+  mongodb-replica:
+    image: mongo:6
+    command: mongod --replSet ${MONGO_REPLICA_SET} --bind_ip_all --port 27018
+    ports:
+      - "${MONGO_REPLICA_PORT}:27018"
+    volumes:
+      - mongo-replica:/data/db
+    depends_on:
+      - mongodb-primary
+
+  api-gateway:
+    build: ./api-gateway
+    ports:
+      - "${API_GATEWAY_PORT}:3000"
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+    env_file:
+      - ./api-gateway/.env
+    environment:
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
+      PRODUCT_SERVICE_URL: ${PRODUCT_SERVICE_URL}
+      ORDER_SERVICE_URL: ${ORDER_SERVICE_URL}
+      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL}
+
+  auth-service:
+    build: ./services/auth-service
+    depends_on:
+      - mongodb-primary
+    env_file:
+      - ./services/auth-service/.env
+    environment:
+      MONGO_URI: ${AUTH_MONGO_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      PORT: ${AUTH_SERVICE_PORT}
+
+  product-service:
+    build: ./services/product-service
+    depends_on:
+      - mongodb-primary
+    env_file:
+      - ./services/product-service/.env
+    environment:
+      MONGO_URI: ${PRODUCT_MONGO_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      PORT: ${PRODUCT_SERVICE_PORT}
+
+  order-service:
+    build: ./services/order-service
+    depends_on:
+      - mongodb-primary
+      - rabbitmq
+    env_file:
+      - ./services/order-service/.env
+    environment:
+      MONGO_URI: ${ORDER_MONGO_URI}
+      MONGO_READ_URI: ${ORDER_MONGO_READ_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      PORT: ${ORDER_SERVICE_PORT}
+
+  payment-service:
+    build: ./services/payment-service
+    depends_on:
+      - rabbitmq
+    env_file:
+      - ./services/payment-service/.env
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      PORT: ${PAYMENT_SERVICE_PORT}
+
+  notification-service:
+    build: ./services/notification-service
+    depends_on:
+      - rabbitmq
+    env_file:
+      - ./services/notification-service/.env
+    environment:
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      PORT: ${NOTIFICATION_SERVICE_PORT}
+
+volumes:
+  mongo-primary:
+  mongo-replica:
