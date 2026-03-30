@@ -1,401 +1,283 @@
-# SmartCart - Microservices Platform
+<div align="center">
 
-A modern, scalable microservices architecture for an e-commerce platform built with Node.js, Docker, and Kubernetes.
+<!-- Animated Banner -->
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=200&section=header&text=SmartCart&fontSize=80&fontColor=fff&animation=twinkling&fontAlignY=35&desc=Scalable%20Microservices%20E-Commerce%20Backend&descAlignY=55&descSize=20" width="100%"/>
 
-## 📋 Table of Contents
+<!-- Typing Animation -->
+<a href="https://git.io/typing-svg">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=1000&color=6366F1&center=true&vCenter=true&multiline=true&repeat=true&width=700&height=80&lines=Production-Ready+Microservices+Architecture;Event-Driven+with+RabbitMQ;Kubernetes+Deployed+%7C+MongoDB+Read+Replicas" alt="Typing SVG" />
+</a>
 
-- [Overview](#overview)
-- [Architecture](#architecture)
-- [Services](#services)
-- [Prerequisites](#prerequisites)
-- [Getting Started](#getting-started)
-- [Configuration](#configuration)
-- [Docker Setup](#docker-setup)
-- [Kubernetes Deployment](#kubernetes-deployment)
-- [Project Structure](#project-structure)
-- [API Documentation](#api-documentation)
-- [Development](#development)
-- [Contributing](#contributing)
-- [License](#license)
+<br/>
 
-## 🎯 Overview
+<!-- Badges -->
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express.js-4.x-000000?style=for-the-badge&logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-6.0-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.x-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Minikube-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-Auth-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
 
-SmartCart is a containerized microservices platform designed for high scalability and maintainability. Each service is independently deployable and communicates through well-defined APIs and message queues.
+<br/>
 
-### Key Features
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen?style=flat-square)
+![Services](https://img.shields.io/badge/Microservices-6-blueviolet?style=flat-square)
 
-- **Microservices Architecture**: Independently deployable services
-- **API Gateway**: Centralized entry point for all client requests
-- **Authentication**: JWT-based authentication across services
-- **Message Queue**: RabbitMQ integration for asynchronous communication
-- **Container Ready**: Docker support for all services
-- **Kubernetes Ready**: Complete K8s configuration included
-- **Load Testing**: Built-in load testing scripts
+</div>
+
+---
+
+## 📖 What is SmartCart?
+
+**SmartCart** is a production-style **microservices e-commerce backend** built with Node.js. Instead of one big application, it's split into small independent services that each handle one job — auth, products, orders, payments, and notifications. They all talk to each other through an API Gateway and use RabbitMQ for async event-driven communication.
+
+> Built to demonstrate real-world backend architecture patterns used at companies like Flipkart, Amazon, and JPMC.
+
+---
 
 ## 🏗️ Architecture
 
 ```
-Client Requests
-      ↓
-  API Gateway
-      ↓
- ┌────────────────────────────────────┐
- ├→ Auth Service       (Port 3001)    │
- ├→ Product Service    (Port 3002)    │
- ├→ Order Service      (Port 3003)    │
- ├→ Payment Service    (Port 3004)    │
- └→ Notification Service (Port 3005)  │
-      ↓
-┌─────────────────────────────────────┐
-├→ MongoDB (Data Persistence)         │
-├→ RabbitMQ (Message Queue)           │
-└─────────────────────────────────────┘
+                        ┌─────────────────────────────┐
+                        │   Client (React / Postman)   │
+                        └──────────────┬──────────────┘
+                                       │
+                        ┌──────────────▼──────────────┐
+                        │       API Gateway :3000       │
+                        │  Rate Limiting · JWT · Logs   │
+                        └──┬──────┬──────┬──────┬──────┘
+                           │      │      │      │
+              ┌────────────▼─┐ ┌──▼───┐ ┌▼─────┴──┐ ┌──────────┐
+              │ Auth  :3001  │ │Prod  │ │Order    │ │Payment   │
+              │ JWT · bcrypt │ │:3002 │ │:3003    │ │:3004     │
+              └──────┬───────┘ └──┬───┘ └────┬────┘ └──────────┘
+                     │            │           │
+              ┌──────▼────┐ ┌────▼────┐ ┌────▼─────────────────┐
+              │  MongoDB  │ │ MongoDB │ │ MongoDB Primary :27017 │
+              │   (auth)  │ │  (prod) │ │ MongoDB Replica :27018 │
+              └───────────┘ └─────────┘ └──────────┬────────────┘
+                                                    │
+                                         ┌──────────▼──────────┐
+                                         │   RabbitMQ :5672     │
+                                         └──────────┬───────────┘
+                                                    │
+                                         ┌──────────▼──────────┐
+                                         │ Notification :3005   │
+                                         │  Email · Logs        │
+                                         └─────────────────────┘
 ```
 
-## 🔧 Services
+---
 
-### API Gateway
-- **Port**: 3000
-- **Purpose**: Routes requests to appropriate microservices
-- **Key Features**:
-  - Request routing
-  - Authentication middleware
-  - Rate limiting
-  - Request logging
+## ⚡ Services
 
-### Auth Service
-- **Port**: 3001
-- **Purpose**: User authentication and authorization
-- **Endpoints**:
-  - `POST /auth/register` - Register new user
-  - `POST /auth/login` - User login
-  - `POST /auth/verify` - Verify JWT token
+| Service | Port | Responsibility |
+|---|---|---|
+| **API Gateway** | 3000 | Routes all requests, JWT verification, rate limiting |
+| **Auth Service** | 3001 | Register, Login, JWT + Refresh tokens, roles |
+| **Product Service** | 3002 | CRUD products, pagination, search |
+| **Order Service** | 3003 | Place orders, MongoDB read replica routing |
+| **Payment Service** | 3004 | Mock payment processing, payment events |
+| **Notification Service** | 3005 | RabbitMQ consumer, email/log notifications |
 
-### Product Service
-- **Port**: 3002
-- **Purpose**: Product catalog management
-- **Endpoints**:
-  - `GET /products` - List all products
-  - `GET /products/:id` - Get product details
-  - `POST /products` - Create new product
-  - `PUT /products/:id` - Update product
-  - `DELETE /products/:id` - Delete product
+---
 
-### Order Service
-- **Port**: 3003
-- **Purpose**: Order processing and management
-- **Endpoints**:
-  - `GET /orders` - List orders
-  - `POST /orders` - Create new order
-  - `GET /orders/:id` - Get order details
-  - `PUT /orders/:id` - Update order status
+## 🔑 Key Features
 
-### Payment Service
-- **Port**: 3004
-- **Purpose**: Payment processing
-- **Features**: Handles payment validation and processing
+- 🔐 **JWT Authentication** — Access token (15min) + Refresh token (7d) flow
+- 👮 **Role-based Access** — Admin and User roles with middleware guards
+- 🐇 **Event-Driven** — Orders trigger RabbitMQ events consumed by Notification service
+- 📖 **MongoDB Read Replica** — Writes go to Primary `:27017`, reads go to Replica `:27018`
+- 🚦 **Rate Limiting** — Global 100 req/15min, stricter 20 req/15min on auth routes
+- 🐳 **Dockerized** — Full `docker-compose` setup with one command startup
+- ☸️ **Kubernetes Ready** — Order service deployed on Minikube with 2+ replicas
+- 📊 **Load Tested** — Verified 400 concurrent requests with 0% failure rate
 
-### Notification Service
-- **Port**: 3005
-- **Purpose**: Send notifications to users
-- **Features**: Email, SMS, and push notifications via message queue
+---
 
-## 📦 Prerequisites
-
-- **Node.js**: v14 or higher
-- **Docker**: v20.10 or higher
-- **Docker Compose**: v1.29 or higher
-- **MongoDB**: v4.4 or higher (optional, if running locally)
-- **RabbitMQ**: v3.9 or higher (optional, if running locally)
-- **kubectl**: v1.20 or higher (for Kubernetes deployment)
-
-## 🚀 Getting Started
-
-### Local Development Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/smartcart.git
-   cd smartcart
-   ```
-
-2. **Install dependencies for all services**
-   ```bash
-   npm install
-   cd api-gateway && npm install && cd ..
-   cd services && npm install && cd ..
-   ```
-
-3. **Create environment files**
-   ```bash
-   cp .env.example .env
-   cp api-gateway/.env.example api-gateway/.env
-   cp services/auth-service/.env.example services/auth-service/.env
-   # ... repeat for other services
-   ```
-
-4. **Start services locally**
-   ```bash
-   # Terminal 1: API Gateway
-   cd api-gateway && npm start
-
-   # Terminal 2: Auth Service
-   cd services/auth-service && npm start
-
-   # Terminal 3: Product Service
-   cd services/product-service && npm start
-
-   # ... start other services in separate terminals
-   ```
-
-### Using Docker Compose
-
-The easiest way to run the entire application locally:
-
-```bash
-docker-compose up -d
-```
-
-This will start all services, MongoDB, RabbitMQ, and required infrastructure.
-
-To stop everything:
-```bash
-docker-compose down
-```
-
-## ⚙️ Configuration
-
-### Environment Variables
-
-Create `.env` files in each service directory. Example:
-
-**api-gateway/.env**
-```
-PORT=3000
-LOG_LEVEL=debug
-AUTH_SERVICE_URL=http://auth-service:3001
-PRODUCT_SERVICE_URL=http://product-service:3002
-ORDER_SERVICE_URL=http://order-service:3003
-PAYMENT_SERVICE_URL=http://payment-service:3004
-NOTIFICATION_SERVICE_URL=http://notification-service:3005
-RATE_LIMIT_WINDOW_MS=15000
-RATE_LIMIT_MAX_REQUESTS=100
-```
-
-**services/auth-service/.env**
-```
-PORT=3001
-MONGODB_URI=mongodb://localhost:27017/smartcart
-JWT_SECRET=your_jwt_secret_key
-JWT_EXPIRY=24h
-```
-
-**services/order-service/.env**
-```
-PORT=3003
-MONGODB_URI=mongodb://localhost:27017/smartcart
-RABBITMQ_URL=amqp://localhost:5672
-```
-
-## 🐳 Docker Setup
-
-### Building Individual Services
-
-```bash
-# Build API Gateway
-docker build -t smartcart/api-gateway:latest ./api-gateway
-
-# Build Auth Service
-docker build -t smartcart/auth-service:latest ./services/auth-service
-
-# Build all services
-for dir in api-gateway services/*/; do
-  docker build -t smartcart/$(basename $dir):latest ./$dir
-done
-```
-
-### Running with Docker Compose
-
-```bash
-# Build and start all services
-docker-compose up -d --build
-
-# View logs
-docker-compose logs -f
-
-# Stop all services
-docker-compose down
-```
-
-## ☸️ Kubernetes Deployment
+## 🚀 Quick Start
 
 ### Prerequisites
-- Kubernetes cluster (minikube, EKS, GKE, etc.)
-- kubectl configured
 
-### Deploy to Kubernetes
+```bash
+node >= 18
+docker + docker compose
+```
 
-1. **Create namespace**
-   ```bash
-   kubectl apply -f k8s/order-service/namespace.yaml
-   ```
+### Run with Docker Compose
 
-2. **Create secrets and configmaps**
-   ```bash
-   kubectl apply -f k8s/order-service/secret.yaml
-   kubectl apply -f k8s/order-service/configmap.yaml
-   ```
+```bash
+# Clone the repo
+git clone https://github.com/yourusername/smartcart.git
+cd smartcart
 
-3. **Deploy services**
-   ```bash
-   kubectl apply -f k8s/order-service/deployment.yaml
-   kubectl apply -f k8s/order-service/service.yaml
-   ```
+# Start MongoDB primary only first
+docker-compose up -d mongodb-primary mongodb-replica
 
-4. **Verify deployment**
-   ```bash
-   kubectl get pods -n smartcart
-   kubectl get services -n smartcart
-   ```
+# Wait 10 seconds, then initialize replica set
+docker exec -it smartcart-mongodb-primary-1 mongosh --eval "
+rs.initiate({
+  _id: 'rs0',
+  members: [
+    { _id: 0, host: 'mongodb-primary:27017', priority: 2 },
+    { _id: 1, host: 'mongodb-replica:27018', priority: 1 }
+  ]
+})"
+
+# Start all services
+docker-compose up --build
+```
+
+✅ API Gateway running at `http://localhost:3000`
+
+---
+
+## 🐇 RabbitMQ Event Flow
+
+```
+Place Order
+    │
+    ▼
+Order Service ──publishes──► order_created queue
+                                    │
+                                    ▼
+                         Notification Service
+                              consumes msg
+                                    │
+                                    ▼
+                            📧 Send Email / Log
+
+Pay for Order
+    │
+    ▼
+Payment Service ──publishes──► payment_success queue
+                                    │
+                                    ▼
+                         Notification Service
+                              consumes msg
+                                    │
+                                    ▼
+                            📧 Payment Receipt
+```
+
+View live queues at: `http://localhost:15672` (guest/guest)
+
+---
+
+## ☸️ Kubernetes (Minikube)
+
+The Order Service is deployed on Kubernetes with 2 replicas:
+
+```bash
+# Deploy
+kubectl apply -f k8s/order-service/
+
+# Watch pods
+kubectl get pods -n smartcart -w
+
+# Get service URL
+minikube service order-service -n smartcart --url
+
+# Scale up
+kubectl scale deployment order-service -n smartcart --replicas=5
+```
+
+```
+k8s/order-service/
+├── namespace.yaml      # smartcart namespace
+├── secret.yaml         # DB URI, JWT, RabbitMQ credentials
+├── configmap.yaml      # PORT, NODE_ENV
+├── deployment.yaml     # 2 replicas, health probes
+└── service.yaml        # NodePort :30003
+```
+
+---
+
+## 📊 Load Test Results
+
+Tested with custom Node.js load test script against 2 Kubernetes pods:
+
+| Concurrency | Write (Primary) | Read by ID (Replica) | Success Rate |
+|---|---|---|---|
+| 10 | 744ms | 487ms | 100% |
+| 50 | 673ms | 585ms | 100% |
+| 100 | 1043ms | 790ms | 100% |
+| 200 | 1222ms | 878ms | 100% |
+| 400 | 1422ms | 1033ms | 100% |
+
+> **0 failures** across 400 concurrent requests on 2 pods. Read replica consistently outperforms primary under load.
+
+---
 
 ## 📁 Project Structure
 
 ```
 smartcart/
-├── api-gateway/              # API Gateway service
-│   ├── src/
-│   │   ├── index.js
-│   │   └── middleware/      # Auth, logging, rate limiting
-│   ├── Dockerfile
-│   └── package.json
-├── services/                 # Business logic services
-│   ├── auth-service/        # Authentication & Authorization
-│   ├── product-service/     # Product Management
-│   ├── order-service/       # Order Processing
-│   ├── payment-service/     # Payment Processing
-│   └── notification-service/ # Notifications
-├── k8s/                      # Kubernetes manifests
+├── docker-compose.yml
+├── api-gateway/
+│   └── src/
+│       ├── index.js
+│       └── middleware/
+│           ├── auth.middleware.js
+│           ├── rateLimiter.js
+│           └── logger.js
+├── services/
+│   ├── auth-service/
+│   │   └── src/
+│   │       ├── models/User.js
+│   │       ├── controllers/auth.controller.js
+│   │       ├── routes/auth.routes.js
+│   │       └── utils/jwt.utils.js
+│   ├── product-service/
+│   │   └── src/
+│   │       ├── models/Product.js
+│   │       └── controllers/product.controller.js
+│   ├── order-service/
+│   │   └── src/
+│   │       ├── config/db.js           ← dual connection (primary + replica)
+│   │       ├── models/Order.js
+│   │       ├── controllers/order.controller.js
+│   │       └── utils/rabbitmq.js
+│   ├── payment-service/
+│   └── notification-service/
+├── k8s/
 │   └── order-service/
-├── scripts/                  # Utility scripts
-│   ├── load-test.js        # Load testing
-│   └── load-test2.js
-├── docker-compose.yml        # Docker Compose configuration
-├── .gitignore               # Git ignore rules
-├── .dockerignore            # Docker ignore rules
-└── README.md                # This file
+│       ├── namespace.yaml
+│       ├── secret.yaml
+│       ├── configmap.yaml
+│       ├── deployment.yaml
+│       └── service.yaml
+└── scripts/
+    └── load-test.js
 ```
-
-## 📚 API Documentation
-
-### Authentication
-
-Most endpoints require a valid JWT token in the Authorization header:
-
-```bash
-Authorization: Bearer <TOKEN>
-```
-
-### Example Requests
-
-**Register User**
-```bash
-curl -X POST http://localhost:3000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "user@example.com",
-    "password": "password123",
-    "name": "John Doe"
-  }'
-```
-
-**Get Products**
-```bash
-curl -X GET http://localhost:3000/products \
-  -H "Authorization: Bearer <TOKEN>"
-```
-
-**Create Order**
-```bash
-curl -X POST http://localhost:3000/orders \
-  -H "Authorization: Bearer <TOKEN>" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "items": [{"productId": "123", "quantity": 2}],
-    "shippingAddress": "123 Main St, City, State 12345"
-  }'
-```
-
-## 💻 Development
-
-### Running Tests
-
-```bash
-# Run tests for all services
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-```
-
-### Load Testing
-
-Run load tests to verify system performance:
-
-```bash
-node scripts/load-test.js
-node scripts/load-test2.js
-```
-
-### Debugging
-
-Enable debug logging:
-
-```bash
-DEBUG=smartcart:* npm start
-```
-
-### Code Style
-
-The project uses ESLint for code linting:
-
-```bash
-# Lint all files
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-```
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### Development Guidelines
-
-- Follow Node.js best practices
-- Write meaningful commit messages
-- Ensure tests pass before submitting PR
-- Update documentation as needed
-
-## 📝 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 📞 Support
-
-For issues and questions:
-- Open an issue on GitHub
-- Check existing documentation
-- Review service-specific README files
-
-## 🔄 CI/CD
-
-The project is set up for continuous integration and deployment. Add your CI/CD workflow file to `.github/workflows/` or your preferred CI/CD platform configuration.
 
 ---
 
-**Last Updated**: March 2026
+## 🛠️ Tech Stack
+
+<div align="center">
+
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![Mongoose](https://img.shields.io/badge/Mongoose-880000?style=for-the-badge&logo=mongoose&logoColor=white)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=for-the-badge&logo=rabbitmq&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
+![bcrypt](https://img.shields.io/badge/bcrypt-003A70?style=for-the-badge&logo=letsencrypt&logoColor=white)
+
+</div>
+
+<div align="center">
+
+<!-- Footer wave -->
+<img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=6,11,20&height=120&section=footer" width="100%"/>
+
+**Built with ❤️ for learning production-grade backend architecture**
+
+⭐ Star this repo if it helped you!
+
+</div>
